@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>k6 Report</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:24px}
+    table{border-collapse:collapse;width:720px}
+    th,td{border:1px solid #ddd;padding:8px;text-align:left}
+    th{background:#f4f4f4}
+    .big{font-size:1.4em;font-weight:600}
+  </style>
+</head>
+<body>
+  <h1>k6 Quick Report</h1>
+  <p>Source: <code>k6_results.json</code></p>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Total HTTP requests</td><td class="big">174</td></tr>
+    <tr><td>Failed request rate</td><td>0.00 %</td></tr>
+    <tr><td>Checks pass rate</td><td>100.00 % (348/348)</td></tr>
+    <tr><td>Avg response size (bytes)</td><td>2716</td></tr>
+    <tr><td>Avg req duration (ms)</td><td>317.83</td></tr>
+    <tr><td>p90 req duration (ms)</td><td>416.9322</td></tr>
+    <tr><td>p95 req duration (ms)</td><td>425.7882</td></tr>
+    <tr><td>Max req duration (ms)</td><td>1089.0728</td></tr>
+  </table>
+  <h2>Notes</h2>
+  <p>This is a lightweight HTML summary generated from k6 JSON output. For full interactive reports, use a newer k6 that supports <code>k6 report</code> or Grafana k6 cloud.</p>
+</body>
+</html>
