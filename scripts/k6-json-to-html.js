@@ -49,6 +49,32 @@ for (const line of lines) {
   }
 }
 
+// Build time-series map for charting (bucket by second)
+const timeseries = {};
+for (const line of lines) {
+  let obj;
+  try { obj = JSON.parse(line); } catch (e) { continue; }
+  if (obj.type === 'Point' && obj.data && obj.data.time) {
+    const t = new Date(obj.data.time);
+    if (isNaN(t)) continue;
+    const sec = t.toISOString().substring(0,19); // yyyy-mm-ddTHH:MM:SS
+    if (!timeseries[sec]) timeseries[sec] = {};
+    if (typeof obj.data.value === 'number') {
+      timeseries[sec][obj.metric] = obj.data.value;
+    }
+  }
+}
+
+// prepare chart arrays sorted by time
+const tsKeys = Object.keys(timeseries).sort();
+const chart = {
+  times: tsKeys,
+  http_reqs: tsKeys.map(k => timeseries[k].http_reqs || 0),
+  latency: tsKeys.map(k => timeseries[k].http_req_duration || 0),
+  failed_rate: tsKeys.map(k => timeseries[k].http_req_failed || 0),
+  vus: tsKeys.map(k => timeseries[k].vus || 0),
+};
+
 function avg(arr) {
   if (!arr.length) return 0;
   return arr.reduce((a,b) => a+b, 0)/arr.length;
@@ -61,19 +87,18 @@ function percentile(arr, p) {
   return s[idx];
 }
 
-// ─── PERBAIKAN LOGIC: Total Requests ────────────────────────────────
-// http_reqs adalah counter kumulatif. Kita ambil nilai MAX (terakhir), bukan jumlahnya.
-const total_reqs = metrics.http_reqs.length ? Math.max(...metrics.http_reqs) : 0;
+// ─── PERBAIKAN LOGIC: Total Requests & Checks ───────────────────────
+// In NDJSON output http_reqs appears as interval counts (often 1). To get
+// total requests, sum the values instead of taking max.
+const total_reqs = metrics.http_reqs.length ? metrics.http_reqs.reduce((s, v) => s + v, 0) : 0;
 
-// http_req_failed dan checks adalah Rate. Rata-rata rate per interval adalah pendekatan yang wajar.
-const failed_rate = metrics.http_req_failed.length ? (avg(metrics.http_req_failed)) : 0;
+// http_req_failed is a rate (0/1 per sample); average gives an approximate failure rate.
+const failed_rate = metrics.http_req_failed.length ? avg(metrics.http_req_failed) : 0;
 
-// Checks pass rate: nilai di stream adalah 'pass rate' (0-1).
-const checks_rate = metrics.checks.length ? (avg(metrics.checks)) : 0;
-
-const checks_count = metrics.checks.length; // Ini adalah jumlah data point sampling, bukan jumlah check individual. 
-// Untuk simplifikasi di report ini, kita gunakan pass rate yang dihitung.
-// Note: Akurasi checks pass detail lebih kompleks, tapi rate rata-rata cukup untuk quick report.
+// For checks, each data point is typically 1 (pass) or 0 (fail). Compute total passes and rate.
+const checks_count = metrics.checks.length;
+const checks_pass = checks_count ? metrics.checks.reduce((s, v) => s + v, 0) : 0;
+const checks_rate = checks_count ? (checks_pass / checks_count) : 0;
 
 const dur_avg = avg(metrics.http_req_duration);
 const dur_p90 = percentile(metrics.http_req_duration, 90);
@@ -153,7 +178,37 @@ const html = `<!doctype html>
 
     <h2>Notes</h2>
     <p>This is a lightweight HTML summary generated from k6 JSON output. Custom metrics from <code>test_demoblaze.js</code> are now included.</p>
+
+    <h2>Charts</h2>
+    <div style="width:100%;max-width:900px;margin-top:12px">
+      <canvas id="chart-rps" height="120"></canvas>
+      <canvas id="chart-lat" height="120" style="margin-top:18px"></canvas>
+      <canvas id="chart-fail" height="80" style="margin-top:18px"></canvas>
+    </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function(){
+      const times = ${JSON.stringify(chart.times)};
+      const rps = ${JSON.stringify(chart.http_reqs)};
+      const lat = ${JSON.stringify(chart.latency)};
+      const fail = ${JSON.stringify(chart.failed_rate)};
+
+      function mkLine(elId, label, data, color){
+        const ctx = document.getElementById(elId).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: { labels: times, datasets: [{ label, data, borderColor: color, backgroundColor: color, fill:false, tension:0.25 }] },
+          options: { scales:{ x:{ display:false }, y:{ beginAtZero:true } }, plugins:{ legend:{ display:true } } }
+        });
+      }
+
+      mkLine('chart-rps','Requests per second', rps, 'rgb(29,140,248)');
+      mkLine('chart-lat','Latency (ms)', lat, 'rgb(245,166,35)');
+      mkLine('chart-fail','Failed rate', fail, 'rgb(214,63,63)');
+    })();
+  </script>
 </body>
 </html>`;
 

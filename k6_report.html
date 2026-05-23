@@ -4,28 +4,73 @@
   <meta charset="utf-8">
   <title>k6 Report</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;margin:24px}
-    table{border-collapse:collapse;width:720px}
-    th,td{border:1px solid #ddd;padding:8px;text-align:left}
-    th{background:#f4f4f4}
-    .big{font-size:1.4em;font-weight:600}
+    body{font-family:Arial,Helvetica,sans-serif;margin:24px;background-color:#f9f9f9}
+    .container{background:#fff;max-width:800px;margin:0 auto;padding:20px;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+    h1{color:#333;border-bottom:2px solid #7d64ff;padding-bottom:10px}
+    table{border-collapse:collapse;width:100%;margin-top:20px}
+    th,td{border:1px solid #ddd;padding:12px;text-align:left}
+    th{background:#f4f4f4;color:#555;font-weight:600}
+    tr:nth-child(even){background-color:#f9f9f9}
+    .big{font-size:1.5em;font-weight:bold;color:#7d64ff}
+    .meta{color:#777;font-size:0.9em;margin-bottom:20px}
+    .badge{display:inline-block;padding:4px 8px;font-size:0.8em;border-radius:4px;background:#eee;color:#555}
   </style>
 </head>
 <body>
-  <h1>k6 Quick Report</h1>
-  <p>Source: <code>k6_results.json</code></p>
-  <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Total HTTP requests</td><td class="big">174</td></tr>
-    <tr><td>Failed request rate</td><td>0.00 %</td></tr>
-    <tr><td>Checks pass rate</td><td>100.00 % (348/348)</td></tr>
-    <tr><td>Avg response size (bytes)</td><td>2716</td></tr>
-    <tr><td>Avg req duration (ms)</td><td>317.83</td></tr>
-    <tr><td>p90 req duration (ms)</td><td>416.9322</td></tr>
-    <tr><td>p95 req duration (ms)</td><td>425.7882</td></tr>
-    <tr><td>Max req duration (ms)</td><td>1089.0728</td></tr>
-  </table>
-  <h2>Notes</h2>
-  <p>This is a lightweight HTML summary generated from k6 JSON output. For full interactive reports, use a newer k6 that supports <code>k6 report</code> or Grafana k6 cloud.</p>
+  <div class="container">
+    <h1>k6 Load Test Report</h1>
+    <div class="meta">Source: <code>k6_results.json</code> | Generated: 5/23/2026, 9:43:11 PM</div>
+    
+    <table>
+      <tr><th>Metric</th><th>Value</th></tr>
+      <tr><td>Total HTTP requests</td><td class="big">164</td></tr>
+      <tr><td>Failed request rate</td><td>0.00 %</td></tr>
+      <tr><td>Checks pass rate (Global)</td><td>100.00 %</td></tr>
+      <tr><td>Avg response size (bytes)</td><td>2716</td></tr>
+      <tr><td>Avg req duration (ms)</td><td>477.54</td></tr>
+      <tr><td>p90 req duration (ms)</td><td>757.01</td></tr>
+      <tr><td>p95 req duration (ms)</td><td>1017.69</td></tr>
+      <tr><td>Max req duration (ms)</td><td>1505.41</td></tr>
+    </table>
+
+    <h3>Custom Metrics</h3>
+    <table>
+       <tr><th>Metric Name</th><th>Analysis</th></tr>
+       <tr><td>Login Duration (Custom)</td><td>Avg: 481ms | <strong>p95: 1314ms</strong></td></tr><tr><td>Login Error Rate (Custom)</td><td><span style="">0.00 %</span></td></tr><tr><td>Entries Duration (Custom)</td><td>Avg: 474ms | <strong>p95: 986ms</strong></td></tr><tr><td>Entries Error Rate (Custom)</td><td><span style="">0.00 %</span></td></tr>
+    </table>
+
+    <h2>Notes</h2>
+    <p>This is a lightweight HTML summary generated from k6 JSON output. Custom metrics from <code>test_demoblaze.js</code> are now included.</p>
+
+    <h2>Charts</h2>
+    <div style="width:100%;max-width:900px;margin-top:12px">
+      <canvas id="chart-rps" height="120"></canvas>
+      <canvas id="chart-lat" height="120" style="margin-top:18px"></canvas>
+      <canvas id="chart-fail" height="80" style="margin-top:18px"></canvas>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function(){
+      const times = ["2026-05-23T14:39:02","2026-05-23T14:39:03","2026-05-23T14:39:04","2026-05-23T14:39:05","2026-05-23T14:39:06","2026-05-23T14:39:07","2026-05-23T14:39:08","2026-05-23T14:39:09","2026-05-23T14:39:10","2026-05-23T14:39:11","2026-05-23T14:39:12","2026-05-23T14:39:13","2026-05-23T14:39:14","2026-05-23T14:39:15","2026-05-23T14:39:16","2026-05-23T14:39:17","2026-05-23T14:39:18","2026-05-23T14:39:19","2026-05-23T14:39:20","2026-05-23T14:39:21","2026-05-23T14:39:22","2026-05-23T14:39:23","2026-05-23T14:39:24","2026-05-23T14:39:25","2026-05-23T14:39:26","2026-05-23T14:39:27","2026-05-23T14:39:28","2026-05-23T14:39:29","2026-05-23T14:39:30","2026-05-23T14:39:31","2026-05-23T14:39:32","2026-05-23T14:39:33","2026-05-23T14:39:34","2026-05-23T14:39:35"];
+      const rps = [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0];
+      const lat = [583.094,0,670.508,385.6342,376.1416,416.159,370.5193,757.0102,473.4954,475.3997,300.1055,406.2086,713.8485,298.6229,613.2285,453.6324,1179.4782,382.6118,400.0759,301.9624,312.2747,262.7588,281.1504,315.863,270.2823,347.6842,260.0925,357.5547,285.9791,430.1983,379.1367,358.0515,0,0];
+      const fail = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+      function mkLine(elId, label, data, color){
+        const ctx = document.getElementById(elId).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: { labels: times, datasets: [{ label, data, borderColor: color, backgroundColor: color, fill:false, tension:0.25 }] },
+          options: { scales:{ x:{ display:false }, y:{ beginAtZero:true } }, plugins:{ legend:{ display:true } } }
+        });
+      }
+
+      mkLine('chart-rps','Requests per second', rps, 'rgb(29,140,248)');
+      mkLine('chart-lat','Latency (ms)', lat, 'rgb(245,166,35)');
+      mkLine('chart-fail','Failed rate', fail, 'rgb(214,63,63)');
+    })();
+  </script>
 </body>
 </html>
